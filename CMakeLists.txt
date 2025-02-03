@@ -20,6 +20,7 @@ target_sources(
             BASE_DIRS include
             FILES
                 include/dungeon/dungeon.h
+                include/dungeon/player.h
                 include/dungeon/util.h
     PRIVATE
         src/main.c

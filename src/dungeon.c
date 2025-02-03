@@ -21,7 +21,7 @@ const int32_t roomChances[_ROOM_TYPE_COUNT] = {
     0,
 };
 
-Dungeon* Dungeon_Create(const int32_t size[2]) {
+Dungeon* Dungeon_Create(const int8_t size[2]) {
     assert(size != NULL);
 
     Dungeon *const self = calloc(
@@ -32,15 +32,15 @@ Dungeon* Dungeon_Create(const int32_t size[2]) {
     );
     assert(self != NULL);
 
-    memcpy(self->size, size, sizeof(int32_t[2]));
+    memcpy(self->size, size, sizeof(self->size));
 
     int32_t totalRoomChance = 0;
     for (int32_t i = 0; i < _ROOM_TYPE_COUNT; ++i) {
         totalRoomChance += roomChances[i];
     }
 
-    for (int32_t y = 0; y < size[1]; ++y) {
-        for (int32_t x = 0; x < size[0]; ++x) {
+    for (int8_t y = 0; y < size[1]; ++y) {
+        for (int8_t x = 0; x < size[0]; ++x) {
             Room *const room = &self->rooms[y * size[0] + x];
             room->type = (RoomType)RandIndex(
                 _ROOM_TYPE_COUNT,
@@ -50,11 +50,9 @@ Dungeon* Dungeon_Create(const int32_t size[2]) {
         }
     }
 
-    const int32_t treasurePosition[2] = {
-        RandRangei32(0, size[0]),
-        RandRangei32(0, size[1]),
-    };
-    self->rooms[treasurePosition[1] * size[0] + treasurePosition[0]].type = ROOM_TREASURE;
+    self->treasurePosition[0] = RandRangei32(0, size[0]);
+    self->treasurePosition[1] = RandRangei32(0, size[1]);
+    self->rooms[self->treasurePosition[1] * size[0] + self->treasurePosition[0]].type = ROOM_TREASURE;
 
     return self;
 }

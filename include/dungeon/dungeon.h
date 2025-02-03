@@ -41,11 +41,12 @@ struct Room {
 };
 
 struct Dungeon {
-    int32_t size[2];
+    int8_t size[2];
+    int8_t treasurePosition[2];
     Room rooms[];
 };
 
-Dungeon* Dungeon_Create(const int32_t size[2]);
+Dungeon* Dungeon_Create(const int8_t size[2]);
 void Dungeon_Destroy(Dungeon* self);
 
 #endif // __DUNGEON_H__
