@@ -15,6 +15,14 @@ target_compile_options(
 )
 target_sources(
     dungeon
+    PUBLIC
+        FILE_SET HEADERS
+            BASE_DIRS include
+            FILES
+                include/dungeon/dungeon.h
+                include/dungeon/util.h
     PRIVATE
         src/main.c
+        src/dungeon.c
+        src/util.c
 )
