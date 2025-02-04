@@ -31,4 +31,7 @@ int32_t RandRangei32(int32_t min, int32_t max);
 // 'totalWeight' is the total sum of all values in 'weights' - if 0 or less, it will be calculated automatically.
 int32_t RandIndex(int32_t weightCount, const int32_t weights[weightCount], int32_t totalWeight);
 
+int32_t String_Compare_IgnoreCase(int32_t maxSize, const char a[maxSize], const char b[maxSize]);
+#define String_CompareLiteral_IgnoreCase(literal, str) String_Compare_IgnoreCase(sizeof(literal), literal, str)
+
 #endif // __UTIL_H__

@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 float Randf32(void) {
     const float rng = (float)rand() / (float)RAND_MAX;
@@ -36,4 +37,14 @@ int32_t RandIndex(
         rng -= weights[index];
     }
     return index - 1;
+}
+
+int32_t String_Compare_IgnoreCase(const int32_t maxSize, const char a[maxSize], const char b[maxSize]) {
+    assert(a != NULL);
+    assert(b != NULL);
+    int32_t diff = 0;
+    for (int32_t i = 0; diff == 0 && i < maxSize; ++i) {
+        diff = tolower((int32_t)a[i]) - tolower((int32_t)b[i]);
+    }
+    return diff;
 }
