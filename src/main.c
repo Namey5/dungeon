@@ -124,4 +124,11 @@ void PrintMap(const Dungeon *const dungeon, const Player *const player) {
         }
         printf("\n");
     }
+
+    printf(
+        "You are at [%hhd, %hhd] facing %s.\n",
+        player->position.current[0],
+        player->position.current[1],
+        Orientation_ToString(Player_GetOrientation(player))
+    );
 }

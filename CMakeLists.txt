@@ -25,5 +25,6 @@ target_sources(
     PRIVATE
         src/main.c
         src/dungeon.c
+        src/player.c
         src/util.c
 )
