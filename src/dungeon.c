@@ -32,7 +32,7 @@ Dungeon* Dungeon_Create(const int8_t size[2]) {
     );
     assert(self != NULL);
 
-    memcpy(self->size, size, sizeof(self->size));
+    Vec2_Set(self->size, size);
 
     int32_t totalRoomChance = 0;
     for (int32_t i = 0; i < _ROOM_TYPE_COUNT; ++i) {

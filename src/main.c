@@ -32,7 +32,7 @@ int32_t main(const int32_t argc, const char *const argv[argc]) {
     do {
         spawn[0] = RandRangei32(0, dungeon->size[0]);
         spawn[1] = RandRangei32(0, dungeon->size[1]);
-    } while (memcmp(spawn, dungeon->treasurePosition, sizeof(spawn)));
+    } while (Vec2_Equal(spawn, dungeon->treasurePosition));
 
     Player player = {
         .position = {
@@ -81,7 +81,7 @@ void PrintMap(const Dungeon *const dungeon, const Player *const player) {
             } else if (x < 0 || x >= dungeon->size[0]) {
                 // left+right border:
                 printf("|");
-            } else if (memcmp((uint8_t[2]) { x, y }, player->position.current, sizeof(player->position.current)) == 0) {
+            } else if (Vec2_Equal((int8_t[2]) { x, y }, player->position.current)) {
                 // player:
                 if (player->position.previous[1] < player->position.current[1]) {
                     printf("^");

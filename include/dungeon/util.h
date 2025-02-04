@@ -1,6 +1,7 @@
 #ifndef __UTIL_H__
 #define __UTIL_H__
 
+#include <stdbool.h>
 #include <stdint.h>
 
 // Return the greater of two values.
@@ -9,6 +10,16 @@
 #define Min(a, b) ((a) < (b) ? (a) : (b))
 // Clamp value 'x' between 'min' and 'max'.
 #define Clamp(x, min, max) Max((min), Min((max), (x)))
+
+// Fast assign from int8_t[2] 'src' to 'dest'.
+static inline void Vec2_Set(int8_t dest[2], const int8_t src[2]) {
+    *(int16_t*)dest = *(int16_t*)src;
+}
+
+// Check if 2 int8_t[2] are equal.
+static inline bool Vec2_Equal(const int8_t a[2], const int8_t b[2]) {
+    return *(int16_t*)a == *(int16_t*)b;
+}
 
 // Generates a random float in the range of [0,1].
 float Randf32(void);
