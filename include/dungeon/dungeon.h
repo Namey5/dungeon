@@ -39,8 +39,17 @@ struct Room {
         uint8_t trap;
         uint8_t enemy;
         uint8_t treasure;
+        uint8_t spawn;
     };
 };
+
+void Room_InitEmpty(Room* self);
+void Room_InitItem(Room* self);
+void Room_InitPit(Room* self);
+void Room_InitTrap(Room* self);
+void Room_InitEnemy(Room* self);
+void Room_InitTreasure(Room* self);
+void Room_InitSpawn(Room* self);
 
 struct Dungeon {
     int8_t size[2];

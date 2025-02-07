@@ -39,18 +39,20 @@ Dungeon* Dungeon_Create(const int8_t size[2]) {
 
     Vec2_Set(self->size, size);
 
-    int32_t totalRoomChance = 0;
-    for (int32_t i = 0; i < _ROOM_TYPE_COUNT; ++i) {
-        totalRoomChance += roomDistribution[i];
-    }
-
     const RoomType defaultRoom = ROOM_EMPTY;
     {
+        assert((sizeof(roomDistribution) / sizeof(roomDistribution[0])) == _ROOM_TYPE_COUNT);
+
+        int32_t totalRoomDistribution = 0;
+        for (int32_t i = 0; i < _ROOM_TYPE_COUNT; ++i) {
+            totalRoomDistribution += roomDistribution[i];
+        }
+
         // Fill out the rooms linearly based on their distribution chances (rounded down):
         int32_t roomIndex = 0;
         for (RoomType roomType = 0; roomType < _ROOM_TYPE_COUNT; ++roomType) {
             // Make sure each room type appears at least once:
-            const int32_t minimumCount = Max(1, roomDistribution[roomType] * totalRooms / totalRoomChance);
+            const int32_t minimumCount = Max(1, roomDistribution[roomType] * totalRooms / totalRoomDistribution);
             for (int32_t count = 0; count < minimumCount && roomIndex < totalRooms; ++count, ++roomIndex) {
                 self->rooms[roomIndex].type = roomType;
             }
@@ -77,20 +79,30 @@ Dungeon* Dungeon_Create(const int8_t size[2]) {
             const int32_t index = Dungeon_RoomIndex(self, position);
             Room *const room = &self->rooms[index];
             switch (room->type) {
-                case ROOM_EMPTY:
-                case ROOM_ITEM:
-                case ROOM_PIT:
-                case ROOM_TRAP:
+                case ROOM_EMPTY: {
+                    Room_InitEmpty(room);
+                } break;
+                case ROOM_ITEM: {
+                    Room_InitItem(room);
+                } break;
+                case ROOM_PIT: {
+                    Room_InitPit(room);
+                } break;
+                case ROOM_TRAP: {
+                    Room_InitTrap(room);
+                } break;
                 case ROOM_ENEMY: {
-                    // TODO: init rooms based on their type.
+                    Room_InitEnemy(room);
                 } break;
                 case ROOM_TREASURE: {
                     assert(Vec2_Equal(self->treasurePosition, invalidPosition));
                     Vec2_Set(self->treasurePosition, position);
+                    Room_InitTreasure(room);
                 } break;
                 case ROOM_SPAWN: {
                     assert(Vec2_Equal(self->spawnPosition, invalidPosition));
                     Vec2_Set(self->spawnPosition, position);
+                    Room_InitSpawn(room);
                 } break;
                 case _ROOM_TYPE_COUNT: {
                     assert(false);
@@ -107,4 +119,60 @@ Dungeon* Dungeon_Create(const int8_t size[2]) {
 void Dungeon_Destroy(Dungeon *const self) {
     assert(self != NULL);
     free(self);
+}
+
+void Room_InitEmpty(Room *const self) {
+    assert(self != NULL);
+    *self = (Room) {
+        .type = ROOM_EMPTY,
+        .empty = 0,
+    };
+}
+
+void Room_InitItem(Room *const self) {
+    assert(self != NULL);
+    *self = (Room) {
+        .type = ROOM_ITEM,
+        .item = 0,
+    };
+}
+
+void Room_InitPit(Room *const self) {
+    assert(self != NULL);
+    *self = (Room) {
+        .type = ROOM_PIT,
+        .pit = 0,
+    };
+}
+
+void Room_InitTrap(Room *const self) {
+    assert(self != NULL);
+    *self = (Room) {
+        .type = ROOM_TRAP,
+        .trap = 0,
+    };
+}
+
+void Room_InitEnemy(Room *const self) {
+    assert(self != NULL);
+    *self = (Room) {
+        .type = ROOM_ENEMY,
+        .enemy = 0,
+    };
+}
+
+void Room_InitTreasure(Room *const self) {
+    assert(self != NULL);
+    *self = (Room) {
+        .type = ROOM_TREASURE,
+        .treasure = 0,
+    };
+}
+
+void Room_InitSpawn(Room *const self) {
+    assert(self != NULL);
+    *self = (Room) {
+        .type = ROOM_SPAWN,
+        .spawn = 0,
+    };
 }

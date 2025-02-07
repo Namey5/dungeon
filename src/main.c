@@ -7,6 +7,7 @@
 #include <time.h>
 
 #include "dungeon/dungeon.h"
+#include "dungeon/item.h"
 #include "dungeon/player.h"
 #include "dungeon/util.h"
 
@@ -80,14 +81,43 @@ int32_t main(const int32_t argc, const char *const argv[argc]) {
 
     char input[32];
     while (player.health.current > 0) {
+        Room *const room = &dungeon->rooms[Dungeon_RoomIndex(dungeon, player.position.current)];
+
+        printf("--------------------------\n");
+
+        switch (room->type) {
+            case ROOM_EMPTY: {
+                printf("You come across an empty room.\n");
+            } break;
+            case ROOM_ITEM: {
+                printf("You found an ITEM!\n");
+            } break;
+            case ROOM_PIT: {
+                printf("You come across a seemingly bottomless pit.\n");
+            } break;
+            case ROOM_TRAP: {
+                printf("You step on a trap and lose HEALTH.\n");
+            } break;
+            case ROOM_ENEMY: {
+                printf("A vicious cave beast blocks your path.\n");
+            } break;
+            case ROOM_TREASURE: {
+                printf("Congratulations, you have found the treasure!\n");
+            } break;
+            case ROOM_SPAWN: {
+                printf("You stand at the entrance to the dungeon.\n");
+            } break;
+            case _ROOM_TYPE_COUNT: {
+                assert(false);
+            } break;
+        }
+
         while (true) {
             printf(
-                "--------------------------\n"
                 "What do you do (type 'help' for a list of actions)?\n"
                 "> "
             );
 
-            input[0] = '\0';
             scanf("%31s", input);
 
             if (HandleCommonActions(input, dungeon, &player) || HandleMovementActions(input, dungeon, &player)) {
