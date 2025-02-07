@@ -90,7 +90,13 @@ int32_t main(const int32_t argc, const char *const argv[argc]) {
                 printf("You come across an empty room.\n");
             } break;
             case ROOM_ITEM: {
-                printf("You found an ITEM!\n");
+                player.inventory[room->item] += 1;
+                printf(
+                    "You found a %s! You now have %d.\n",
+                    ItemType_ToString(room->item),
+                    player.inventory[room->item]
+                );
+                Room_Clear(room);
             } break;
             case ROOM_PIT: {
                 printf("You come across a seemingly bottomless pit.\n");

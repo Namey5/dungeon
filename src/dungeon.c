@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "dungeon/item.h"
 #include "dungeon/util.h"
 
 const int32_t roomDistribution[_ROOM_TYPE_COUNT] = {
@@ -133,7 +134,7 @@ void Room_InitItem(Room *const self) {
     assert(self != NULL);
     *self = (Room) {
         .type = ROOM_ITEM,
-        .item = 0,
+        .item = (ItemType)RandRangei32(0, _ITEM_TYPE_COUNT),
     };
 }
 
@@ -175,4 +176,9 @@ void Room_InitSpawn(Room *const self) {
         .type = ROOM_SPAWN,
         .spawn = 0,
     };
+}
+
+void Room_Clear(Room *const self) {
+    assert(self != NULL);
+    Room_InitEmpty(self);
 }

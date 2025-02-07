@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#include "dungeon/item.h"
+
 typedef struct Dungeon Dungeon;
 typedef struct Room Room;
 
@@ -34,7 +36,7 @@ struct Room {
     RoomType type;
     union {
         uint8_t empty;
-        uint8_t item;
+        ItemType item;
         uint8_t pit;
         uint8_t trap;
         uint8_t enemy;
@@ -50,6 +52,7 @@ void Room_InitTrap(Room* self);
 void Room_InitEnemy(Room* self);
 void Room_InitTreasure(Room* self);
 void Room_InitSpawn(Room* self);
+void Room_Clear(Room* self);
 
 struct Dungeon {
     int8_t size[2];
