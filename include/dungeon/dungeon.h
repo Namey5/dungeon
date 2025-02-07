@@ -13,6 +13,7 @@ typedef enum RoomType {
     ROOM_TRAP,
     ROOM_ENEMY,
     ROOM_TREASURE,
+    ROOM_SPAWN,
     _ROOM_TYPE_COUNT,
 } RoomType;
 
@@ -24,6 +25,7 @@ static inline const char* RoomType_ToString(const RoomType self) {
         case ROOM_TRAP: return "TRAP";
         case ROOM_ENEMY: return "ENEMY";
         case ROOM_TREASURE: return "TREASURE";
+        case ROOM_SPAWN: return "SPAWN";
         case _ROOM_TYPE_COUNT: return "[UNKNOWN]";
     }
 }
@@ -42,11 +44,16 @@ struct Room {
 
 struct Dungeon {
     int8_t size[2];
+    int8_t spawnPosition[2];
     int8_t treasurePosition[2];
     Room rooms[];
 };
 
 Dungeon* Dungeon_Create(const int8_t size[2]);
 void Dungeon_Destroy(Dungeon* self);
+
+static inline int32_t Dungeon_RoomIndex(const Dungeon *const self, const int8_t position[2]) {
+    return position[1] * self->size[0] + position[0];
+}
 
 #endif // __DUNGEON_H__

@@ -19,7 +19,7 @@ const char commonActionsText[] = (
     "  'map' - display your current position and orientation,\n"
     "          as well as a map of previously explored rooms\n"
     "  'health' - show the amount of HEALTH you have remaining\n"
-    "  'inventory' - display the totals of each item in your inventory\n"
+    "  'inventory' - display the totals of each item in your INVENTORY\n"
     "  'food' - consume 1 FOOD to regain HEALTH"
 );
 
@@ -48,18 +48,11 @@ int32_t main(const int32_t argc, const char *const argv[argc]) {
 
     Dungeon* dungeon = Dungeon_Create(defaultDungeonSize);
 
-    // Keep generating spawn points until we aren't spawning on the treasure:
-    int8_t spawn[2];
-    do {
-        spawn[0] = RandRangei32(0, dungeon->size[0]);
-        spawn[1] = RandRangei32(0, dungeon->size[1]);
-    } while (Vec2_Equal(spawn, dungeon->treasurePosition));
-
     Player player = {
         .position = {
-            .current = { spawn[0], spawn[1] },
+            .current = { dungeon->spawnPosition[0], dungeon->spawnPosition[1] },
             // This is only used for direction, so spawn facing north:
-            .previous = { spawn[0], spawn[1] - 1 },
+            .previous = { dungeon->spawnPosition[0], dungeon->spawnPosition[1] - 1 },
         },
         .health = {
             .max = 20,
@@ -156,6 +149,7 @@ int32_t main(const int32_t argc, const char *const argv[argc]) {
 }
 
 void PrintMap(const Dungeon *const dungeon, const Player *const player) {
+    // Print y-axis in reverse:
     for (int8_t y = dungeon->size[1]; y >= -2; --y) {
         for (int8_t x = -2; x <= dungeon->size[0]; ++x) {
             if (x > -2) {
@@ -198,7 +192,7 @@ void PrintMap(const Dungeon *const dungeon, const Player *const player) {
                 }
             } else {
                 // room:
-                const Room *const room = &dungeon->rooms[y * dungeon->size[0] + x];
+                const Room *const room = &dungeon->rooms[Dungeon_RoomIndex(dungeon, (int8_t[2]) { x, y })];
                 switch (room->type) {
                     case ROOM_EMPTY: {
                         printf(".");
@@ -217,6 +211,9 @@ void PrintMap(const Dungeon *const dungeon, const Player *const player) {
                     } break;
                     case ROOM_TREASURE: {
                         printf("*");
+                    } break;
+                    case ROOM_SPAWN: {
+                        printf("H");
                     } break;
                     case _ROOM_TYPE_COUNT: {
                         assert(false);
