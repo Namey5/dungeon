@@ -33,6 +33,8 @@ const char movementActionsText[] = (
 
 #define CheckInput(action, input) (String_CompareLiteral_IgnoreCase(action, input) == 0)
 
+bool HandleCommonActions(const char* input, Dungeon* dungeon, Player* player);
+bool HandleMovementActions(const char* input, Dungeon* dungeon, Player* player);
 void PrintMap(const Dungeon* dungeon, const Player* player);
 
 int32_t main(const int32_t argc, const char *const argv[argc]) {
@@ -88,64 +90,92 @@ int32_t main(const int32_t argc, const char *const argv[argc]) {
             input[0] = '\0';
             scanf("%31s", input);
 
-            if (CheckInput("exit", input)) {
-                player.health.current = 0;
-            } else if (CheckInput("help", input)) {
-                printf("%s\n%s\n", commonActionsText, movementActionsText);
-            } else if (CheckInput("map", input)) {
-                PrintMap(dungeon, &player);
-            } else if (CheckInput("health", input)) {
-                printf("Current HEALTH: %hhd/%hhd\n", player.health.current, player.health.max);
-            } else if (CheckInput("inventory", input)) {
-                printf("INVENTORY: {\n");
-                for (ItemType item = 0; item < _ITEM_TYPE_COUNT; ++item) {
-                    printf("  %s: %hhd,\n", ItemType_ToString(item), player.inventory[item]);
-                }
-                printf("}\n");
-            } else if (CheckInput("food", input)) {
-                if (player.inventory[ITEM_FOOD] == 0) {
-                    printf("You have no FOOD.\n");
-                } else if (player.health.current >= player.health.max) {
-                    printf(
-                        "You already have max HEALTH (%hhd/%hhd).\n",
-                        player.health.current,
-                        player.health.max
-                    );
-                } else {
-                    const int32_t health = RandRangei32(1, 6);
-                    printf(
-                        "You consume 1 FOOD and regain %d HEALTH (%d/%d).\n",
-                        health,
-                        player.health.current,
-                        player.health.max
-                    );
-                    player.health.current += health;
-                    player.inventory[ITEM_FOOD] -= 1;
-                }
-            } else if (CheckInput("forward", input)) {
-                printf("You move forward into the next room.\n");
-                Player_Move(&player, (int8_t[2]) { 0, 1 });
-            } else if (CheckInput("back", input)) {
-                printf("You edge back into the room from whence you came.\n");
-                Player_Move(&player, (int8_t[2]) { 0, -1 });
-            } else if (CheckInput("left", input)) {
-                printf("You turn left into the next room.\n");
-                Player_Move(&player, (int8_t[2]) { -1, 0 });
-            } else if (CheckInput("right", input)) {
-                printf("You turn right into the next room.\n");
-                Player_Move(&player, (int8_t[2]) { 1, 0 });
-            } else {
-                printf("Unrecognised command '%s'.\n", input);
-                continue;
+            if (HandleCommonActions(input, dungeon, &player) || HandleMovementActions(input, dungeon, &player)) {
+                break;
             }
 
-            break;
+            printf("Unrecognised command '%s'.\n", input);
         }
     }
 
     Dungeon_Destroy(dungeon);
 
     return 0;
+}
+
+bool HandleCommonActions(const char* input, Dungeon *const dungeon, Player *const player) {
+    if (CheckInput("exit", input)) {
+        player->health.current = 0;
+    } else if (CheckInput("help", input)) {
+        printf("%s\n%s\n", commonActionsText, movementActionsText);
+    } else if (CheckInput("map", input)) {
+        PrintMap(dungeon, player);
+    } else if (CheckInput("health", input)) {
+        printf("Current HEALTH: %hhd/%hhd\n", player->health.current, player->health.max);
+    } else if (CheckInput("inventory", input)) {
+        printf("INVENTORY: {\n");
+        for (ItemType item = 0; item < _ITEM_TYPE_COUNT; ++item) {
+            printf("  %s: %hhd,\n", ItemType_ToString(item), player->inventory[item]);
+        }
+        printf("}\n");
+    } else if (CheckInput("food", input)) {
+        if (player->inventory[ITEM_FOOD] == 0) {
+            printf("You have no FOOD.\n");
+        } else if (player->health.current >= player->health.max) {
+            printf(
+                "You already have max HEALTH (%hhd/%hhd).\n",
+                player->health.current,
+                player->health.max
+            );
+        } else {
+            const int32_t health = RandRangei32(1, 6);
+            printf(
+                "You consume 1 FOOD and regain %d HEALTH (%d/%d).\n",
+                health,
+                player->health.current,
+                player->health.max
+            );
+            player->health.current += health;
+            player->inventory[ITEM_FOOD] -= 1;
+        }
+    } else {
+        return false;
+    }
+
+    return true;
+}
+
+bool HandleMovementActions(const char* input, Dungeon *const dungeon, Player *const player) {
+    int8_t currentPosition[2], previousPosition[2];
+    Vec2_Set(currentPosition, player->position.current);
+    Vec2_Set(previousPosition, player->position.previous);
+
+    if (CheckInput("forward", input)) {
+        printf("You move forward into the next room.\n");
+        Player_Move(player, (int8_t[2]) { 0, 1 });
+    } else if (CheckInput("back", input)) {
+        printf("You edge back into the room from whence you came.\n");
+        Player_Move(player, (int8_t[2]) { 0, -1 });
+    } else if (CheckInput("left", input)) {
+        printf("You turn left into the next room.\n");
+        Player_Move(player, (int8_t[2]) { -1, 0 });
+    } else if (CheckInput("right", input)) {
+        printf("You turn right into the next room.\n");
+        Player_Move(player, (int8_t[2]) { 1, 0 });
+    } else {
+        return false;
+    }
+
+    if (
+        player->position.current[0] < 0 || player->position.current[0] >= dungeon->size[0]
+        || player->position.current[1] < 0 || player->position.current[1] >= dungeon->size[1]
+    ) {
+        printf("You come upon a solid wall - please choose a new direction.\n");
+        Vec2_Set(player->position.current, currentPosition);
+        Vec2_Set(player->position.previous, previousPosition);
+    }
+
+    return true;
 }
 
 void PrintMap(const Dungeon *const dungeon, const Player *const player) {
