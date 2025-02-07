@@ -80,15 +80,21 @@ int32_t main(const int32_t argc, const char *const argv[argc]) {
     );
 
     char input[32];
-    while (player.health.current > 0) {
+    while (true) {
         Room *const room = &dungeon->rooms[Dungeon_RoomIndex(dungeon, player.position.current)];
 
         printf("--------------------------\n");
+
+        if (room->type == ROOM_TREASURE) {
+            printf("Congratulations, you have found the treasure!\n");
+            break;
+        }
 
         switch (room->type) {
             case ROOM_EMPTY: {
                 printf("You come across an empty room.\n");
             } break;
+
             case ROOM_ITEM: {
                 player.inventory[room->item] += 1;
                 printf(
@@ -98,21 +104,24 @@ int32_t main(const int32_t argc, const char *const argv[argc]) {
                 );
                 Room_Clear(room);
             } break;
+
             case ROOM_PIT: {
                 printf("You come across a seemingly bottomless pit.\n");
             } break;
+
             case ROOM_TRAP: {
                 printf("You step on a trap and lose HEALTH.\n");
             } break;
+
             case ROOM_ENEMY: {
                 printf("A vicious cave beast blocks your path.\n");
             } break;
-            case ROOM_TREASURE: {
-                printf("Congratulations, you have found the treasure!\n");
-            } break;
+
             case ROOM_SPAWN: {
                 printf("You stand at the entrance to the dungeon.\n");
             } break;
+
+            case ROOM_TREASURE:
             case _ROOM_TYPE_COUNT: {
                 assert(false);
             } break;
@@ -131,6 +140,11 @@ int32_t main(const int32_t argc, const char *const argv[argc]) {
             }
 
             printf("Unrecognised command '%s'.\n", input);
+        }
+
+        if (player.health.current <= 0) {
+            printf("YOU DIED!\n");
+            break;
         }
     }
 
