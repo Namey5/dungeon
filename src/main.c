@@ -278,6 +278,8 @@ int32_t main(const int32_t argc, const char *const argv[argc]) {
             } break;
         }
 
+        room->visited = true;
+
         if (player.health.current <= 0) {
             printf("YOU DIED!\n");
             break;
@@ -414,7 +416,9 @@ void PrintMap(const Dungeon *const dungeon, const Player *const player) {
             } else {
                 // room:
                 const Room *const room = &dungeon->rooms[Dungeon_RoomIndex(dungeon, (int8_t[2]) { x, y })];
-                switch (room->type) {
+                if (!room->visited) {
+                    printf("?");
+                } else switch (room->type) {
                     case ROOM_EMPTY: {
                         printf(".");
                     } break;

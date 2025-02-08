@@ -1,6 +1,7 @@
 #ifndef __DUNGEON_H__
 #define __DUNGEON_H__
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include "dungeon/item.h"
@@ -34,6 +35,7 @@ static inline const char* RoomType_ToString(const RoomType self) {
 
 struct Room {
     RoomType type;
+    bool visited;
     union {
         uint8_t empty;
         ItemType item;
