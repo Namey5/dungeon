@@ -10,10 +10,11 @@
 #include "dungeon/item.h"
 #include "dungeon/player.h"
 #include "dungeon/util.h"
+#include "dungeon/vec2.h"
 
-const int8_t defaultDungeonSize[2] = { 10, 10 };
+const vec2 defaultDungeonSize = { 10, 10 };
 
-const char commonActionsText[] = (
+const char commonActionsText[] =
     "Common Actions:\n"
     "| 'exit' - quit\n"
     "| 'help' - show this menu\n"
@@ -21,30 +22,26 @@ const char commonActionsText[] = (
     "|         as well as a map of previously explored rooms\n"
     "| 'health' - show the amount of HEALTH you have remaining\n"
     "| 'inventory' - display the totals of each item in your INVENTORY\n"
-    "| 'food' - consume 1 FOOD to regain HEALTH"
-);
+    "| 'food' - consume 1 FOOD to regain HEALTH";
 
-const char movementActionsText[] = (
+const char movementActionsText[] =
     "Movement Actions:\n"
     "| 'forward' - move into the room you are currently facing\n"
     "| 'back' - turn around and move back into the previous room\n"
     "| 'left' - turn anti-clockwise and move into the next room\n"
-    "| 'right' - turn clockwise and move into the next room"
-);
+    "| 'right' - turn clockwise and move into the next room";
 
-const char pitActionsText[] = (
+const char pitActionsText[] =
     "Pit Actions:\n"
     "| 'jump' - attempt to jump across the pit, keeping in mind\n"
     "|          that your gear's weight will influence your chances\n"
     "| 'swing' - use 1 ROPE and 1 HOOK to guarrantee safe passage\n"
-    "| 'return' - retreat back into the previous room"
-);
+    "| 'return' - retreat back into the previous room";
 
-const char enemyActionsText[] = (
+const char enemyActionsText[] =
     "Combat Actions:\n"
     "| 'fight' - attack the enemy (your chances will improve with a SWORD)\n"
-    "| 'flee' - attempt to escape to the previous room"
-);
+    "| 'flee' - attempt to escape to the previous room";
 
 #define CheckInput(action, input) (String_CompareLiteral_IgnoreCase(action, input) == 0)
 
@@ -61,7 +58,7 @@ bool HandleInput_MovementActions(const char* input, Dungeon* dungeon, Player* pl
 
 void PrintMap(const Dungeon* dungeon, const Player* player, bool onlyVisited);
 
-int32_t main(const int32_t argc, const char *const argv[argc]) {
+int32_t main(const int32_t argc, const char *const argv[]) {
     if (argc > 1) {
         printf("Launching with %d arg(s):\n", argc);
         for (int32_t i = 0; i < argc; ++i) {
@@ -157,7 +154,7 @@ int32_t main(const int32_t argc, const char *const argv[argc]) {
 }
 
 bool IsGameOver(const Dungeon *const dungeon, const Player *const player) {
-    assert(dungeon != NULL);
+    (void)dungeon;
     assert(player != NULL);
     return player->health.current == 0;
 }
@@ -172,7 +169,9 @@ void HandleRoom_GeneralInput(char input[32], Dungeon *const dungeon, Player *con
             "What do you do (type 'help' for a list of actions)?\n"
             "> "
         );
-        scanf("%31s", input);
+
+        const int32_t _read = scanf("%31s", input);
+        (void)_read;
 
         if (HandleInput_MovementActions(input, dungeon, player)) {
             break;
@@ -189,7 +188,7 @@ void HandleRoom_Item(char input[32], Dungeon *const dungeon, Player *const playe
 
     player->inventory[room->item] += 1;
     printf(
-        "You found a %s! You now have %d.\n",
+        "You found a %s! You now have %hhd.\n",
         ItemType_ToString(room->item),
         player->inventory[room->item]
     );
@@ -214,7 +213,8 @@ void HandleRoom_Pit(char input[32], Dungeon *const dungeon, Player *const player
             "> "
         );
 
-        scanf("%31s", input);
+        const int32_t _read = scanf("%31s", input);
+        (void)_read;
 
         if (CheckInput("help", input)) {
             printf(
@@ -250,7 +250,7 @@ void HandleRoom_Pit(char input[32], Dungeon *const dungeon, Player *const player
             }
         } else if (CheckInput("return", input)) {
             printf("You edge back into the room from whence you came.\n");
-            Player_Move(player, (int8_t[2]) { 0, -1 });
+            Player_Move(player, (vec2) { 0, -1 });
             break;
         } else if (!HandleInput_CommonActions(input, dungeon, player)) {
             printf("Unrecognised command '%s'.\n", input);
@@ -263,16 +263,16 @@ void HandleRoom_Trap(char input[32], Dungeon *const dungeon, Player *const playe
     assert(player != NULL);
     assert(room != NULL);
 
-    const int32_t damage = RandRangei32(1, room->trap.maxDamage + 1);
+    const int8_t damage = (int8_t)RandRangei32(1, room->trap.maxDamage + 1);
     Player_AdjustHealth(player, -damage);
     printf(
-        "You step on a trap and lose %d HEALTH (%d/%d remaining).\n",
+        "You step on a trap and lose %hhd HEALTH (%hhd/%hhd remaining).\n",
         damage,
         player->health.current,
         player->health.max
     );
 
-    room->trap.maxDamage -= RandRangei32(1, 3);
+    room->trap.maxDamage -= (int8_t)RandRangei32(1, 3);
     if (room->trap.maxDamage <= 0) {
         printf("The trap is destroyed and will cause you no more harm.\n");
         Room_Clear(room);
@@ -294,7 +294,7 @@ void HandleRoom_Enemy(char input[32], Dungeon *const dungeon, Player *const play
 
     while (!IsGameOver(dungeon, player)) {
         printf(
-            "You (%d/%d) | VS | Beast (%d/\?\?\?)\n",
+            "You (%hhd/%hhd) | VS | Beast (%hhd/\?\?\?)\n",
             player->health.current,
             player->health.max,
             room->enemy.health
@@ -305,7 +305,8 @@ void HandleRoom_Enemy(char input[32], Dungeon *const dungeon, Player *const play
             "> "
         );
 
-        scanf("%31s", input);
+        const int32_t _read = scanf("%31s", input);
+        (void)_read;
 
         if (CheckInput("help", input)) {
             printf(
@@ -316,13 +317,13 @@ void HandleRoom_Enemy(char input[32], Dungeon *const dungeon, Player *const play
             );
         } else if (CheckInput("fight", input)) {
             if (player->inventory[ITEM_SWORD] > 0) {
-                const int8_t damage = RandRangei32(3, 6);
+                const int8_t damage = (int8_t)RandRangei32(3, 6);
                 room->enemy.health -= damage;
-                printf("You hit the beast with your SWORD and deal %d damage.\n", damage);
+                printf("You hit the beast with your SWORD and deal %hhd damage.\n", damage);
             } else {
-                const int8_t damage = RandRangei32(0, 4);
+                const int8_t damage = (int8_t)RandRangei32(0, 4);
                 room->enemy.health -= damage;
-                printf("You hit the beast with your fists and deal %d damage.\n", damage);
+                printf("You hit the beast with your fists and deal %hhd damage.\n", damage);
             }
 
             if (room->enemy.health <= 0) {
@@ -333,18 +334,18 @@ void HandleRoom_Enemy(char input[32], Dungeon *const dungeon, Player *const play
             }
 
             if (player->inventory[ITEM_SHIELD] > 0) {
-                const int8_t damage = RandRangei32(0, 3);
+                const int8_t damage = (int8_t)RandRangei32(0, 3);
                 Player_AdjustHealth(player, -damage);
-                printf("The beast hits your SHIELD and you take %d damage.\n", damage);
+                printf("The beast hits your SHIELD and you take %hhd damage.\n", damage);
 
                 if (Randf32() > 0.5f) {
                     printf("Your SHIELD breaks!\n");
                     player->inventory[ITEM_SHIELD] -= 1;
                 }
             } else {
-                const int8_t damage = RandRangei32(1, room->enemy.maxDamage);
+                const int8_t damage = (int8_t)RandRangei32(1, room->enemy.maxDamage);
                 Player_AdjustHealth(player, -damage);
-                printf("The beast hits you and deals %d damage.\n", damage);
+                printf("The beast hits you and deals %hhd damage.\n", damage);
             }
         } else if (CheckInput("flee", input)) {
             const float rng = Randf32();
@@ -352,22 +353,23 @@ void HandleRoom_Enemy(char input[32], Dungeon *const dungeon, Player *const play
                 if (rng > 0.8f) {
                     printf("You successfully evade the creature without harm.\n");
                 } else {
-                    const int8_t damage = RandRangei32(1, room->enemy.maxDamage);
+                    const int8_t damage = (int8_t)RandRangei32(1, room->enemy.maxDamage);
                     Player_AdjustHealth(player, -damage);
                     printf(
-                        "You successfully evade the creature, but lose %d HEALTH in the process (%d/%d remaining).\n",
+                        "You successfully evade the creature, "
+                        "but lose %hhd HEALTH in the process (%hhd/%hhd remaining).\n",
                         damage,
                         player->health.current,
                         player->health.max
                     );
                 }
 
-                Player_Move(player, (int8_t[2]) { 0, -1 });
+                Player_Move(player, (vec2) { 0, -1 });
                 break;
             } else {
-                const int8_t damage = RandRangei32(1, room->enemy.maxDamage);
+                const int8_t damage = (int8_t)RandRangei32(1, room->enemy.maxDamage);
                 Player_AdjustHealth(player, -damage);
-                printf("You fail to evade the creature and lose %d HEALTH in the process.\n", damage);
+                printf("You fail to evade the creature and lose %hhd HEALTH in the process.\n", damage);
             }
         } else if (!HandleInput_CommonActions(input, dungeon, player)) {
             printf("Unrecognised command '%s'.\n", input);
@@ -405,11 +407,11 @@ bool HandleInput_CommonActions(const char* input, Dungeon *const dungeon, Player
                 player->health.max
             );
         } else {
-            const int32_t health = RandRangei32(1, 6);
+            const int8_t health = (int8_t)RandRangei32(1, 6);
             Player_AdjustHealth(player, health);
             player->inventory[ITEM_FOOD] -= 1;
             printf(
-                "You consume 1 FOOD and regain %d HEALTH (%d/%d).\n",
+                "You consume 1 FOOD and regain %hhd HEALTH (%hhd/%hhd).\n",
                 health,
                 player->health.current,
                 player->health.max
@@ -423,23 +425,23 @@ bool HandleInput_CommonActions(const char* input, Dungeon *const dungeon, Player
 }
 
 bool HandleInput_MovementActions(const char* input, Dungeon *const dungeon, Player *const player) {
-    int8_t currentPosition[2], previousPosition[2];
+    vec2 currentPosition, previousPosition;
     Vec2_Set(currentPosition, player->position.current);
     Vec2_Set(previousPosition, player->position.previous);
 
     const char* message;
     if (CheckInput("forward", input)) {
         message = "You move forward into the next room.";
-        Player_Move(player, (int8_t[2]) { 0, 1 });
+        Player_Move(player, (vec2) { 0, 1 });
     } else if (CheckInput("back", input)) {
         message = "You edge back into the room from whence you came.";
-        Player_Move(player, (int8_t[2]) { 0, -1 });
+        Player_Move(player, (vec2) { 0, -1 });
     } else if (CheckInput("left", input)) {
         message = "You turn left into the next room.";
-        Player_Move(player, (int8_t[2]) { -1, 0 });
+        Player_Move(player, (vec2) { -1, 0 });
     } else if (CheckInput("right", input)) {
         message = "You turn right into the next room.";
-        Player_Move(player, (int8_t[2]) { 1, 0 });
+        Player_Move(player, (vec2) { 1, 0 });
     } else {
         return false;
     }
@@ -483,14 +485,14 @@ void PrintMap(const Dungeon *const dungeon, const Player *const player, const bo
             if (y < -1) {
                 // x-axis ruler:
                 if (x >= 0 && x < dungeon->size[0]) {
-                    printf("%d", x);
+                    printf("%hhd", x);
                 } else {
                     printf(" ");
                 }
             } else if (x < -1) {
                 // y-axis ruler:
                 if (y >= 0 && y < dungeon->size[1]) {
-                    printf("%d", y);
+                    printf("%hhd", y);
                 } else {
                     printf(" ");
                 }
@@ -500,7 +502,7 @@ void PrintMap(const Dungeon *const dungeon, const Player *const player, const bo
             } else if (x < 0 || x >= dungeon->size[0]) {
                 // left+right border:
                 printf("|");
-            } else if (Vec2_Equal((int8_t[2]) { x, y }, player->position.current)) {
+            } else if (Vec2_Equal((vec2) { x, y }, player->position.current)) {
                 // player:
                 if (player->position.previous[1] < player->position.current[1]) {
                     printf("^");
@@ -515,7 +517,7 @@ void PrintMap(const Dungeon *const dungeon, const Player *const player, const bo
                 }
             } else {
                 // room:
-                const Room *const room = &dungeon->rooms[Dungeon_RoomIndex(dungeon, (int8_t[2]) { x, y })];
+                const Room *const room = &dungeon->rooms[Dungeon_RoomIndex(dungeon, (vec2) { x, y })];
                 if (onlyVisited && !room->visited) {
                     printf("?");
                 } else switch (room->type) {

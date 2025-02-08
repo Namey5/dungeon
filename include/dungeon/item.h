@@ -21,6 +21,7 @@ static inline const char* ItemType_ToString(const ItemType self) {
         case ITEM_ROCK: return "ROCK";
         case _ITEM_TYPE_COUNT: return "[ERROR]";
     }
+    return "[ERROR]";
 }
 
 #endif // __ITEM_H__

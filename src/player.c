@@ -6,7 +6,7 @@
 
 #include "dungeon/util.h"
 
-const int8_t directions[_ORIENTATION_COUNT][2] = {
+const vec2 directions[_ORIENTATION_COUNT] = {
     // ORIENTATION_NORTH:
     {  0,  1 },
     // ORIENTATION_EAST:
@@ -17,7 +17,7 @@ const int8_t directions[_ORIENTATION_COUNT][2] = {
     { -1,  0 },
 };
 
-static inline void Player_GetDirection(const Player *const self, int8_t outDirection[2]) {
+static inline void Player_GetDirection(const Player *const self, vec2 outDirection) {
     outDirection[0] = self->position.current[0] - self->position.previous[0];
     outDirection[1] = self->position.current[1] - self->position.previous[1];
 }
@@ -25,7 +25,7 @@ static inline void Player_GetDirection(const Player *const self, int8_t outDirec
 Orientation Player_GetOrientation(const Player *const self) {
     assert(self != NULL);
 
-    int8_t direction[2];
+    vec2 direction;
     Player_GetDirection(self, direction);
 
     for (Orientation orientation = 0; orientation < _ORIENTATION_COUNT; ++orientation) {
@@ -35,9 +35,10 @@ Orientation Player_GetOrientation(const Player *const self) {
     }
 
     assert(false);
+    return ORIENTATION_NORTH;
 }
 
-void Player_Move(Player *const self, const int8_t direction[2]) {
+void Player_Move(Player *const self, const vec2 direction) {
     assert(self != NULL);
 
     int8_t currentDirection[2];

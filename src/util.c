@@ -21,7 +21,7 @@ int32_t RandRangei32(const int32_t minInclusive, const int32_t maxExclusive) {
 
 int32_t RandIndex(
     const int32_t weightCount,
-    const int32_t weights[weightCount],
+    const int32_t weights[],
     int32_t totalWeight
 ) {
     if (totalWeight <= 0) {
@@ -39,7 +39,7 @@ int32_t RandIndex(
     return index - 1;
 }
 
-int32_t String_Compare_IgnoreCase(const int32_t maxSize, const char a[maxSize], const char b[maxSize]) {
+int32_t String_Compare_IgnoreCase(const int32_t maxSize, const char a[], const char b[]) {
     assert(a != NULL);
     assert(b != NULL);
     int32_t diff = 0;

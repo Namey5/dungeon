@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include "dungeon/item.h"
+#include "dungeon/vec2.h"
 
 typedef struct Player Player;
 
@@ -23,12 +24,13 @@ static inline const char* Orientation_ToString(const Orientation self) {
         case ORIENTATION_WEST: return "WEST";
         case _ORIENTATION_COUNT: return "[ERROR]";
     }
+    return "[ERROR]";
 }
 
 struct Player {
     struct {
-        int8_t current[2];
-        int8_t previous[2];
+        vec2 current;
+        vec2 previous;
     } position;
     struct {
         int8_t current;
@@ -38,7 +40,7 @@ struct Player {
 };
 
 Orientation Player_GetOrientation(const Player* self);
-void Player_Move(Player* self, const int8_t direction[2]);
+void Player_Move(Player* self, const vec2 direction);
 void Player_AdjustHealth(Player* self, int8_t amount);
 
 #endif // __PLAYER_H__

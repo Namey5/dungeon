@@ -24,21 +24,18 @@ const int32_t roomDistribution[_ROOM_TYPE_COUNT] = {
     0,
 };
 
-Dungeon* Dungeon_Create(const int8_t size[2]) {
+Dungeon* Dungeon_Create(const vec2 size) {
     assert(size != NULL);
 
-    const int32_t totalRooms = size[0] * size[1];
-    assert(totalRooms >= _ROOM_TYPE_COUNT);
-
-    Dungeon *const self = calloc(
-        1,
-        sizeof(*self)
-        // Reserve space at end for rooms:
-            + sizeof(self->rooms[0]) * totalRooms
-    );
+    Dungeon *const self = calloc(1, sizeof(*self));
     assert(self != NULL);
 
     Vec2_Set(self->size, size);
+
+    const int32_t totalRooms = size[0] * size[1];
+    assert(totalRooms >= _ROOM_TYPE_COUNT);
+    self->rooms = calloc(totalRooms, sizeof(self->rooms[0]));
+    assert(self->rooms != NULL);
 
     const RoomType defaultRoom = ROOM_EMPTY;
     {
@@ -72,10 +69,10 @@ Dungeon* Dungeon_Create(const int8_t size[2]) {
         self->rooms[rng].type = current;
     }
 
-    const int8_t invalidPosition[2] = { -1, -1 };
+    const vec2 invalidPosition = { -1, -1 };
     Vec2_Set(self->spawnPosition, invalidPosition);
     Vec2_Set(self->treasurePosition, invalidPosition);
-    for (int8_t position[2] = { 0, 0 }; position[1] < size[1]; ++position[1]) {
+    for (vec2 position = { 0, 0 }; position[1] < size[1]; ++position[1]) {
         for (position[0] = 0; position[0] < size[0]; ++position[0]) {
             const int32_t index = Dungeon_RoomIndex(self, position);
             Room *const room = &self->rooms[index];
@@ -119,6 +116,8 @@ Dungeon* Dungeon_Create(const int8_t size[2]) {
 
 void Dungeon_Destroy(Dungeon *const self) {
     assert(self != NULL);
+    assert(self->rooms != NULL);
+    free(self->rooms);
     free(self);
 }
 
@@ -151,7 +150,7 @@ void Room_InitTrap(Room *const self) {
     *self = (Room) {
         .type = ROOM_TRAP,
         .trap = {
-            .maxDamage = RandRangei32(2, 6),
+            .maxDamage = (int8_t)RandRangei32(2, 6),
         },
     };
 }
@@ -161,8 +160,8 @@ void Room_InitEnemy(Room *const self) {
     *self = (Room) {
         .type = ROOM_ENEMY,
         .enemy = {
-            .health = RandRangei32(4, 8),
-            .maxDamage = RandRangei32(3, 6),
+            .health = (int8_t)RandRangei32(4, 8),
+            .maxDamage = (int8_t)RandRangei32(3, 6),
         },
     };
 }

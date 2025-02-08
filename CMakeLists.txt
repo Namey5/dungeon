@@ -13,6 +13,11 @@ target_compile_options(
         /WX /W4,
         -Werror -Wall -Wextra -Wpedantic>
 )
+target_compile_definitions(
+    dungeon PRIVATE
+    # MSVC complains about scanf usage
+    _CRT_SECURE_NO_WARNINGS
+)
 target_sources(
     dungeon
     PUBLIC
@@ -23,6 +28,7 @@ target_sources(
                 include/dungeon/item.h
                 include/dungeon/player.h
                 include/dungeon/util.h
+                include/dungeon/vec2.h
     PRIVATE
         src/main.c
         src/dungeon.c

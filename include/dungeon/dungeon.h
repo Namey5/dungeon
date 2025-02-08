@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include "dungeon/item.h"
+#include "dungeon/vec2.h"
 
 typedef struct Dungeon Dungeon;
 typedef struct Room Room;
@@ -31,6 +32,7 @@ static inline const char* RoomType_ToString(const RoomType self) {
         case ROOM_SPAWN: return "SPAWN";
         case _ROOM_TYPE_COUNT: return "[UNKNOWN]";
     }
+    return "[ERROR]";
 }
 
 struct Room {
@@ -62,16 +64,16 @@ void Room_InitSpawn(Room* self);
 void Room_Clear(Room* self);
 
 struct Dungeon {
-    int8_t size[2];
-    int8_t spawnPosition[2];
-    int8_t treasurePosition[2];
-    Room rooms[];
+    vec2 size;
+    vec2 spawnPosition;
+    vec2 treasurePosition;
+    Room* rooms;
 };
 
-Dungeon* Dungeon_Create(const int8_t size[2]);
+Dungeon* Dungeon_Create(const vec2 size);
 void Dungeon_Destroy(Dungeon* self);
 
-static inline int32_t Dungeon_RoomIndex(const Dungeon *const self, const int8_t position[2]) {
+static inline int32_t Dungeon_RoomIndex(const Dungeon *const self, const vec2 position) {
     return position[1] * self->size[0] + position[0];
 }
 
