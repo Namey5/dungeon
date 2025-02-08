@@ -48,8 +48,10 @@ const char enemyActionsText[] = (
 
 #define CheckInput(action, input) (String_CompareLiteral_IgnoreCase(action, input) == 0)
 
-bool HandleCommonActions(const char* input, Dungeon* dungeon, Player* player);
-bool HandleMovementActions(const char* input, Dungeon* dungeon, Player* player);
+bool IsGameOver(const Dungeon* dungeon, const Player* player);
+void HandleRoom_GeneralInput(char input[32], Dungeon* dungeon, Player* player);
+bool HandleInput_CommonActions(const char* input, Dungeon* dungeon, Player* player);
+bool HandleInput_MovementActions(const char* input, Dungeon* dungeon, Player* player);
 void PrintMap(const Dungeon* dungeon, const Player* player);
 
 int32_t main(const int32_t argc, const char *const argv[argc]) {
@@ -94,7 +96,7 @@ int32_t main(const int32_t argc, const char *const argv[argc]) {
     );
 
     char input[32];
-    while (player.health.current > 0) {
+    while (!IsGameOver(dungeon, &player)) {
         Room *const room = &dungeon->rooms[Dungeon_RoomIndex(dungeon, player.position.current)];
 
         printf("--------------------------\n");
@@ -107,21 +109,12 @@ int32_t main(const int32_t argc, const char *const argv[argc]) {
         switch (room->type) {
             case ROOM_EMPTY: {
                 printf("You come across an empty room.\n");
+                HandleRoom_GeneralInput(input, dungeon, &player);
+            } break;
 
-                while (player.health.current > 0) {
-                    printf(
-                        "What do you do (type 'help' for a list of actions)?\n"
-                        "> "
-                    );
-
-                    scanf("%31s", input);
-
-                    if (HandleMovementActions(input, dungeon, &player)) {
-                        break;
-                    } else if (!HandleCommonActions(input, dungeon, &player)) {
-                        printf("Unrecognised command '%s'.\n", input);
-                    }
-                }
+            case ROOM_SPAWN: {
+                printf("You stand at the entrance to the dungeon.\n");
+                HandleRoom_GeneralInput(input, dungeon, &player);
             } break;
 
             case ROOM_ITEM: {
@@ -132,21 +125,7 @@ int32_t main(const int32_t argc, const char *const argv[argc]) {
                     player.inventory[room->item]
                 );
                 Room_Clear(room);
-
-                while (player.health.current > 0) {
-                    printf(
-                        "What do you do (type 'help' for a list of actions)?\n"
-                        "> "
-                    );
-
-                    scanf("%31s", input);
-
-                    if (HandleCommonActions(input, dungeon, &player) || HandleMovementActions(input, dungeon, &player)) {
-                        break;
-                    }
-
-                    printf("Unrecognised command '%s'.\n", input);
-                }
+                HandleRoom_GeneralInput(input, dungeon, &player);
             } break;
 
             case ROOM_PIT: {
@@ -156,7 +135,7 @@ int32_t main(const int32_t argc, const char *const argv[argc]) {
                     pitActionsText
                 );
 
-                while (player.health.current > 0) {
+                while (!IsGameOver(dungeon, &player)) {
                     printf(
                         "What do you do (type 'help' for a list of actions)?\n"
                         "> "
@@ -179,7 +158,7 @@ int32_t main(const int32_t argc, const char *const argv[argc]) {
 
                         if (RandRangei32(0, 100) < successPercentage) {
                             printf("You successfully jump the pit!\n");
-                            // TODO: move in a valid direction.
+                            HandleRoom_GeneralInput(input, dungeon, &player);
                             break;
                         } else {
                             printf("You fall to your doom in your attempt to clear the pit.\n");
@@ -200,7 +179,7 @@ int32_t main(const int32_t argc, const char *const argv[argc]) {
                         printf("You edge back into the room from whence you came.\n");
                         Player_Move(&player, (int8_t[2]) { 0, -1 });
                         break;
-                    } else if (!HandleCommonActions(input, dungeon, &player)) {
+                    } else if (!HandleInput_CommonActions(input, dungeon, &player)) {
                         printf("Unrecognised command '%s'.\n", input);
                     }
                 }
@@ -222,20 +201,7 @@ int32_t main(const int32_t argc, const char *const argv[argc]) {
                     Room_Clear(room);
                 }
 
-                while (player.health.current > 0) {
-                    printf(
-                        "What do you do (type 'help' for a list of actions)?\n"
-                        "> "
-                    );
-
-                    scanf("%31s", input);
-
-                    if (HandleMovementActions(input, dungeon, &player)) {
-                        break;
-                    } else if (!HandleCommonActions(input, dungeon, &player)) {
-                        printf("Unrecognised command '%s'.\n", input);
-                    }
-                }
+                HandleRoom_GeneralInput(input, dungeon, &player);
             } break;
 
             case ROOM_ENEMY: {
@@ -245,7 +211,7 @@ int32_t main(const int32_t argc, const char *const argv[argc]) {
                     enemyActionsText
                 );
 
-                while (player.health.current > 0) {
+                while (!IsGameOver(dungeon, &player)) {
                     printf(
                         "You (%d/%d) | VS | Beast (%d/\?\?\?)\n",
                         player.health.current,
@@ -281,6 +247,7 @@ int32_t main(const int32_t argc, const char *const argv[argc]) {
                         if (room->enemy.health <= 0) {
                             printf("The beast is defeated!\n");
                             Room_Clear(room);
+                            HandleRoom_GeneralInput(input, dungeon, &player);
                             break;
                         }
 
@@ -321,26 +288,7 @@ int32_t main(const int32_t argc, const char *const argv[argc]) {
                             player.health.current -= damage;
                             printf("You fail to evade the creature and lose %d HEALTH in the process.\n", damage);
                         }
-                    } else if (!HandleCommonActions(input, dungeon, &player)) {
-                        printf("Unrecognised command '%s'.\n", input);
-                    }
-                }
-            } break;
-
-            case ROOM_SPAWN: {
-                printf("You stand at the entrance to the dungeon.\n");
-
-                while (player.health.current > 0) {
-                    printf(
-                        "What do you do (type 'help' for a list of actions)?\n"
-                        "> "
-                    );
-
-                    scanf("%31s", input);
-
-                    if (HandleMovementActions(input, dungeon, &player)) {
-                        break;
-                    } else if (!HandleCommonActions(input, dungeon, &player)) {
+                    } else if (!HandleInput_CommonActions(input, dungeon, &player)) {
                         printf("Unrecognised command '%s'.\n", input);
                     }
                 }
@@ -352,6 +300,7 @@ int32_t main(const int32_t argc, const char *const argv[argc]) {
             } break;
         }
 
+        // Need to mark this after handling the room incase the room is cleared:
         room->visited = true;
 
         if (player.health.current <= 0) {
@@ -365,7 +314,32 @@ int32_t main(const int32_t argc, const char *const argv[argc]) {
     return 0;
 }
 
-bool HandleCommonActions(const char* input, Dungeon *const dungeon, Player *const player) {
+bool IsGameOver(const Dungeon *const dungeon, const Player *const player) {
+    assert(dungeon != NULL);
+    assert(player != NULL);
+    return player->health.current == 0;
+}
+
+void HandleRoom_GeneralInput(char input[32], Dungeon *const dungeon, Player *const player) {
+    assert(dungeon != NULL);
+    assert(player != NULL);
+
+    while (!IsGameOver(dungeon, player)) {
+        printf(
+            "What do you do (type 'help' for a list of actions)?\n"
+            "> "
+        );
+        scanf("%31s", input);
+
+        if (HandleInput_MovementActions(input, dungeon, player)) {
+            break;
+        } else if (!HandleInput_CommonActions(input, dungeon, player)) {
+            printf("Unrecognised command '%s'.\n", input);
+        }
+    }
+}
+
+bool HandleInput_CommonActions(const char* input, Dungeon *const dungeon, Player *const player) {
     if (CheckInput("exit", input)) {
         player->health.current = 0;
     } else if (CheckInput("help", input)) {
@@ -412,22 +386,23 @@ bool HandleCommonActions(const char* input, Dungeon *const dungeon, Player *cons
     return true;
 }
 
-bool HandleMovementActions(const char* input, Dungeon *const dungeon, Player *const player) {
+bool HandleInput_MovementActions(const char* input, Dungeon *const dungeon, Player *const player) {
     int8_t currentPosition[2], previousPosition[2];
     Vec2_Set(currentPosition, player->position.current);
     Vec2_Set(previousPosition, player->position.previous);
 
+    const char* message;
     if (CheckInput("forward", input)) {
-        printf("You move forward into the next room.\n");
+        message = "You move forward into the next room.";
         Player_Move(player, (int8_t[2]) { 0, 1 });
     } else if (CheckInput("back", input)) {
-        printf("You edge back into the room from whence you came.\n");
+        message = "You edge back into the room from whence you came.";
         Player_Move(player, (int8_t[2]) { 0, -1 });
     } else if (CheckInput("left", input)) {
-        printf("You turn left into the next room.\n");
+        message = "You turn left into the next room.";
         Player_Move(player, (int8_t[2]) { -1, 0 });
     } else if (CheckInput("right", input)) {
-        printf("You turn right into the next room.\n");
+        message = "You turn right into the next room.";
         Player_Move(player, (int8_t[2]) { 1, 0 });
     } else {
         return false;
@@ -440,8 +415,10 @@ bool HandleMovementActions(const char* input, Dungeon *const dungeon, Player *co
         printf("You come upon a solid wall - please choose a new direction.\n");
         Vec2_Set(player->position.current, currentPosition);
         Vec2_Set(player->position.previous, previousPosition);
+        return false;
     }
 
+    printf("%s\n", message);
     return true;
 }
 
