@@ -150,7 +150,9 @@ void Room_InitTrap(Room *const self) {
     assert(self != NULL);
     *self = (Room) {
         .type = ROOM_TRAP,
-        .trap = 0,
+        .trap = {
+            .maxDamage = RandRangei32(2, 6),
+        },
     };
 }
 

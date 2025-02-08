@@ -101,6 +101,21 @@ int32_t main(const int32_t argc, const char *const argv[argc]) {
         switch (room->type) {
             case ROOM_EMPTY: {
                 printf("You come across an empty room.\n");
+
+                while (player.health.current > 0) {
+                    printf(
+                        "What do you do (type 'help' for a list of actions)?\n"
+                        "> "
+                    );
+
+                    scanf("%31s", input);
+
+                    if (HandleMovementActions(input, dungeon, &player)) {
+                        break;
+                    } else if (!HandleCommonActions(input, dungeon, &player)) {
+                        printf("Unrecognised command '%s'.\n", input);
+                    }
+                }
             } break;
 
             case ROOM_ITEM: {
@@ -111,6 +126,21 @@ int32_t main(const int32_t argc, const char *const argv[argc]) {
                     player.inventory[room->item]
                 );
                 Room_Clear(room);
+
+                while (player.health.current > 0) {
+                    printf(
+                        "What do you do (type 'help' for a list of actions)?\n"
+                        "> "
+                    );
+
+                    scanf("%31s", input);
+
+                    if (HandleCommonActions(input, dungeon, &player) || HandleMovementActions(input, dungeon, &player)) {
+                        break;
+                    }
+
+                    printf("Unrecognised command '%s'.\n", input);
+                }
             } break;
 
             case ROOM_PIT: {
@@ -173,36 +203,79 @@ int32_t main(const int32_t argc, const char *const argv[argc]) {
             } break;
 
             case ROOM_TRAP: {
-                printf("You step on a trap and lose HEALTH.\n");
+                const int32_t damage = RandRangei32(1, room->trap.maxDamage + 1);
+                player.health.current -= damage;
+                printf(
+                    "You step on a trap and lose %d HEALTH (%d/%d remaining).\n",
+                    damage,
+                    player.health.current,
+                    player.health.max
+                );
+
+                room->trap.maxDamage -= RandRangei32(1, 3);
+                if (room->trap.maxDamage <= 0) {
+                    printf("The trap is destroyed and will cause you no more harm.\n");
+                    Room_Clear(room);
+                }
+
+                while (player.health.current > 0) {
+                    printf(
+                        "What do you do (type 'help' for a list of actions)?\n"
+                        "> "
+                    );
+
+                    scanf("%31s", input);
+
+                    if (HandleMovementActions(input, dungeon, &player)) {
+                        break;
+                    } else if (!HandleCommonActions(input, dungeon, &player)) {
+                        printf("Unrecognised command '%s'.\n", input);
+                    }
+                }
             } break;
 
             case ROOM_ENEMY: {
                 printf("A vicious cave beast blocks your path.\n");
+
+                while (player.health.current > 0) {
+                    printf(
+                        "What do you do (type 'help' for a list of actions)?\n"
+                        "> "
+                    );
+
+                    scanf("%31s", input);
+
+                    if (HandleMovementActions(input, dungeon, &player)) {
+                        break;
+                    } else if (!HandleCommonActions(input, dungeon, &player)) {
+                        printf("Unrecognised command '%s'.\n", input);
+                    }
+                }
             } break;
 
             case ROOM_SPAWN: {
                 printf("You stand at the entrance to the dungeon.\n");
+
+                while (player.health.current > 0) {
+                    printf(
+                        "What do you do (type 'help' for a list of actions)?\n"
+                        "> "
+                    );
+
+                    scanf("%31s", input);
+
+                    if (HandleMovementActions(input, dungeon, &player)) {
+                        break;
+                    } else if (!HandleCommonActions(input, dungeon, &player)) {
+                        printf("Unrecognised command '%s'.\n", input);
+                    }
+                }
             } break;
 
             case ROOM_TREASURE:
             case _ROOM_TYPE_COUNT: {
                 assert(false);
             } break;
-        }
-
-        while (player.health.current > 0) {
-            printf(
-                "What do you do (type 'help' for a list of actions)?\n"
-                "> "
-            );
-
-            scanf("%31s", input);
-
-            if (HandleCommonActions(input, dungeon, &player) || HandleMovementActions(input, dungeon, &player)) {
-                break;
-            }
-
-            printf("Unrecognised command '%s'.\n", input);
         }
 
         if (player.health.current <= 0) {

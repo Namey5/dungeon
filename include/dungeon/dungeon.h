@@ -38,7 +38,9 @@ struct Room {
         uint8_t empty;
         ItemType item;
         uint8_t pit;
-        uint8_t trap;
+        struct {
+            int8_t maxDamage;
+        } trap;
         uint8_t enemy;
         uint8_t treasure;
         uint8_t spawn;
