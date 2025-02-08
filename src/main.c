@@ -59,7 +59,7 @@ void HandleRoom_Enemy(char input[32], Dungeon* dungeon, Player* player, Room* ro
 bool HandleInput_CommonActions(const char* input, Dungeon* dungeon, Player* player);
 bool HandleInput_MovementActions(const char* input, Dungeon* dungeon, Player* player);
 
-void PrintMap(const Dungeon* dungeon, const Player* player);
+void PrintMap(const Dungeon* dungeon, const Player* player, bool onlyVisited);
 
 int32_t main(const int32_t argc, const char *const argv[argc]) {
     if (argc > 1) {
@@ -109,6 +109,7 @@ int32_t main(const int32_t argc, const char *const argv[argc]) {
         printf("--------------------------\n");
 
         if (room->type == ROOM_TREASURE) {
+            PrintMap(dungeon, &player, false);
             printf("Congratulations, you have found the treasure!\n");
             break;
         }
@@ -144,6 +145,7 @@ int32_t main(const int32_t argc, const char *const argv[argc]) {
         room->visited = true;
 
         if (player.health.current <= 0) {
+            PrintMap(dungeon, &player, false);
             printf("YOU DIED!\n");
             break;
         }
@@ -384,7 +386,7 @@ bool HandleInput_CommonActions(const char* input, Dungeon *const dungeon, Player
             movementActionsText
         );
     } else if (CheckInput("map", input)) {
-        PrintMap(dungeon, player);
+        PrintMap(dungeon, player, true);
     } else if (CheckInput("health", input)) {
         printf("Current HEALTH: %hhd/%hhd\n", player->health.current, player->health.max);
     } else if (CheckInput("inventory", input)) {
@@ -456,7 +458,7 @@ bool HandleInput_MovementActions(const char* input, Dungeon *const dungeon, Play
     return true;
 }
 
-void PrintMap(const Dungeon *const dungeon, const Player *const player) {
+void PrintMap(const Dungeon *const dungeon, const Player *const player, const bool onlyVisited) {
     // Print y-axis in reverse:
     for (int8_t y = dungeon->size[1]; y >= -2; --y) {
         for (int8_t x = -2; x <= dungeon->size[0]; ++x) {
@@ -501,7 +503,7 @@ void PrintMap(const Dungeon *const dungeon, const Player *const player) {
             } else {
                 // room:
                 const Room *const room = &dungeon->rooms[Dungeon_RoomIndex(dungeon, (int8_t[2]) { x, y })];
-                if (!room->visited) {
+                if (onlyVisited && !room->visited) {
                     printf("?");
                 } else switch (room->type) {
                     case ROOM_EMPTY: {
