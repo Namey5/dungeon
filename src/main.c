@@ -15,35 +15,35 @@ const int8_t defaultDungeonSize[2] = { 10, 10 };
 
 const char commonActionsText[] = (
     "Common Actions:\n"
-    "  'exit' - quit\n"
-    "  'help' - show this menu\n"
-    "  'map' - display your current position and orientation,\n"
-    "          as well as a map of previously explored rooms\n"
-    "  'health' - show the amount of HEALTH you have remaining\n"
-    "  'inventory' - display the totals of each item in your INVENTORY\n"
-    "  'food' - consume 1 FOOD to regain HEALTH"
+    "| 'exit' - quit\n"
+    "| 'help' - show this menu\n"
+    "| 'map' - display your current position and orientation,\n"
+    "|         as well as a map of previously explored rooms\n"
+    "| 'health' - show the amount of HEALTH you have remaining\n"
+    "| 'inventory' - display the totals of each item in your INVENTORY\n"
+    "| 'food' - consume 1 FOOD to regain HEALTH"
 );
 
 const char movementActionsText[] = (
     "Movement Actions:\n"
-    "  'forward' - move into the room you are currently facing\n"
-    "  'back' - turn around and move back into the previous room\n"
-    "  'left' - turn anti-clockwise and move into the next room\n"
-    "  'right' - turn clockwise and move into the next room"
+    "| 'forward' - move into the room you are currently facing\n"
+    "| 'back' - turn around and move back into the previous room\n"
+    "| 'left' - turn anti-clockwise and move into the next room\n"
+    "| 'right' - turn clockwise and move into the next room"
 );
 
 const char pitActionsText[] = (
     "Pit Actions:\n"
-    "  'jump' - attempt to jump across the pit, keeping in mind\n"
-    "           that your gear's weight will influence your chances\n"
-    "  'swing' - use 1 ROPE and 1 HOOK to guarrantee safe passage\n"
-    "  'return' - retreat back into the previous room"
+    "| 'jump' - attempt to jump across the pit, keeping in mind\n"
+    "|          that your gear's weight will influence your chances\n"
+    "| 'swing' - use 1 ROPE and 1 HOOK to guarrantee safe passage\n"
+    "| 'return' - retreat back into the previous room"
 );
 
 const char enemyActionsText[] = (
     "Combat Actions:\n"
-    "  'fight' - attack the enemy (your chances will improve with a SWORD)\n"
-    "  'flee' - attempt to escape to the previous room"
+    "| 'fight' - attack the enemy (your chances will improve with a SWORD)\n"
+    "| 'flee' - attempt to escape to the previous room"
 );
 
 #define CheckInput(action, input) (String_CompareLiteral_IgnoreCase(action, input) == 0)
@@ -461,15 +461,15 @@ bool HandleInput_MovementActions(const char* input, Dungeon *const dungeon, Play
 void PrintMap(const Dungeon *const dungeon, const Player *const player, const bool onlyVisited) {
     printf(
         "Map Legend:\n"
-        "  ^ - player (follows orientation)\n"
-        "  H - dungeon entrance\n"
-        "  . - empty room\n"
-        "  + - item pickup\n"
-        "  X - trap\n"
-        "  O - pit\n"
-        "  E - enemy\n"
-        "  * - treasure\n"
-        "  ? - undiscovered room\n"
+        "| ^ - player (follows orientation)\n"
+        "| H - dungeon entrance\n"
+        "| . - empty room\n"
+        "| + - item pickup\n"
+        "| X - trap\n"
+        "| O - pit\n"
+        "| E - enemy\n"
+        "| * - treasure\n"
+        "| ? - undiscovered room\n"
     );
 
     // Print y-axis in reverse:
