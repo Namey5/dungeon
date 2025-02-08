@@ -459,6 +459,19 @@ bool HandleInput_MovementActions(const char* input, Dungeon *const dungeon, Play
 }
 
 void PrintMap(const Dungeon *const dungeon, const Player *const player, const bool onlyVisited) {
+    printf(
+        "Map Legend:\n"
+        "  ^ - player (follows orientation)\n"
+        "  H - dungeon entrance\n"
+        "  . - empty room\n"
+        "  + - item pickup\n"
+        "  X - trap\n"
+        "  O - pit\n"
+        "  E - enemy\n"
+        "  * - treasure\n"
+        "  ? - undiscovered room\n"
+    );
+
     // Print y-axis in reverse:
     for (int8_t y = dungeon->size[1]; y >= -2; --y) {
         for (int8_t x = -2; x <= dungeon->size[0]; ++x) {
