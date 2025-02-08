@@ -21,7 +21,7 @@ jobs:
       # To add more build types (Release, Debug, RelWithDebInfo, etc.) customize the build_type list.
       matrix:
         os: [ubuntu-latest, windows-latest]
-        build_type: [RelWithDebInfo]
+        build_type: [Debug]
         c_compiler: [gcc, clang, cl]
         include:
           - os: windows-latest
@@ -65,8 +65,16 @@ jobs:
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
       run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
 
-    - name: Upload build artifacts
+    - name: Upload Windows build artifacts
+      if: ${{ matrix.os == 'windows-latest' }}
       uses: actions/upload-artifact@v4
       with:
-        name: build-${{ matrix.os }}-${{ matrix.c_compiler }}
-        path: ${{ steps.strings.outputs.build-output-dir }}
+        name: dungeon.${{ runner.os }}-${{ runner.arch }}.${{ matrix.c_compiler }}
+        path: ${{ steps.strings.outputs.build-output-dir }}/${{ matrix.build_type }}
+
+    - name: Upload Linux build artifacts
+      if: ${{ matrix.os == 'ubuntu-latest' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: dungeon.${{ runner.os }}-${{ runner.arch }}.${{ matrix.c_compiler }}
+        path: ${{ steps.strings.outputs.build-output-dir }}/dungeon
