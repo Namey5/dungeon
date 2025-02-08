@@ -396,14 +396,14 @@ bool HandleCommonActions(const char* input, Dungeon *const dungeon, Player *cons
             );
         } else {
             const int32_t health = RandRangei32(1, 6);
+            player->health.current += health;
+            player->inventory[ITEM_FOOD] -= 1;
             printf(
                 "You consume 1 FOOD and regain %d HEALTH (%d/%d).\n",
                 health,
                 player->health.current,
                 player->health.max
             );
-            player->health.current += health;
-            player->inventory[ITEM_FOOD] -= 1;
         }
     } else {
         return false;
