@@ -47,3 +47,8 @@ void Player_Move(Player *const self, const int8_t direction[2]) {
     self->position.current[0] += direction[0] * currentDirection[1] + direction[1] * currentDirection[0];
     self->position.current[1] += direction[1] * currentDirection[1] - direction[0] * currentDirection[0];
 }
+
+void Player_AdjustHealth(Player *const self, const int8_t amount) {
+    assert(self != NULL);
+    self->health.current = Clamp(self->health.current + amount, 0, self->health.max);
+}

@@ -39,5 +39,6 @@ struct Player {
 
 Orientation Player_GetOrientation(const Player* self);
 void Player_Move(Player* self, const int8_t direction[2]);
+void Player_AdjustHealth(Player* self, int8_t amount);
 
 #endif // __PLAYER_H__

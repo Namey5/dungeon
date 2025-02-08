@@ -264,7 +264,7 @@ void HandleRoom_Trap(char input[32], Dungeon *const dungeon, Player *const playe
     assert(room != NULL);
 
     const int32_t damage = RandRangei32(1, room->trap.maxDamage + 1);
-    player->health.current -= damage;
+    Player_AdjustHealth(player, -damage);
     printf(
         "You step on a trap and lose %d HEALTH (%d/%d remaining).\n",
         damage,
@@ -334,7 +334,7 @@ void HandleRoom_Enemy(char input[32], Dungeon *const dungeon, Player *const play
 
             if (player->inventory[ITEM_SHIELD] > 0) {
                 const int8_t damage = RandRangei32(0, 3);
-                player->health.current -= damage;
+                Player_AdjustHealth(player, -damage);
                 printf("The beast hits your SHIELD and you take %d damage.\n", damage);
 
                 if (Randf32() > 0.5f) {
@@ -343,7 +343,7 @@ void HandleRoom_Enemy(char input[32], Dungeon *const dungeon, Player *const play
                 }
             } else {
                 const int8_t damage = RandRangei32(1, room->enemy.maxDamage);
-                player->health.current -= damage;
+                Player_AdjustHealth(player, -damage);
                 printf("The beast hits you and deals %d damage.\n", damage);
             }
         } else if (CheckInput("flee", input)) {
@@ -353,7 +353,7 @@ void HandleRoom_Enemy(char input[32], Dungeon *const dungeon, Player *const play
                     printf("You successfully evade the creature without harm.\n");
                 } else {
                     const int8_t damage = RandRangei32(1, room->enemy.maxDamage);
-                    player->health.current -= damage;
+                    Player_AdjustHealth(player, -damage);
                     printf(
                         "You successfully evade the creature, but lose %d HEALTH in the process (%d/%d remaining).\n",
                         damage,
@@ -366,7 +366,7 @@ void HandleRoom_Enemy(char input[32], Dungeon *const dungeon, Player *const play
                 break;
             } else {
                 const int8_t damage = RandRangei32(1, room->enemy.maxDamage);
-                player->health.current -= damage;
+                Player_AdjustHealth(player, -damage);
                 printf("You fail to evade the creature and lose %d HEALTH in the process.\n", damage);
             }
         } else if (!HandleInput_CommonActions(input, dungeon, player)) {
@@ -406,7 +406,7 @@ bool HandleInput_CommonActions(const char* input, Dungeon *const dungeon, Player
             );
         } else {
             const int32_t health = RandRangei32(1, 6);
-            player->health.current += health;
+            Player_AdjustHealth(player, health);
             player->inventory[ITEM_FOOD] -= 1;
             printf(
                 "You consume 1 FOOD and regain %d HEALTH (%d/%d).\n",
