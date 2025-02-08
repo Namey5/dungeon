@@ -160,7 +160,10 @@ void Room_InitEnemy(Room *const self) {
     assert(self != NULL);
     *self = (Room) {
         .type = ROOM_ENEMY,
-        .enemy = 0,
+        .enemy = {
+            .health = RandRangei32(4, 8),
+            .maxDamage = RandRangei32(3, 6),
+        },
     };
 }
 

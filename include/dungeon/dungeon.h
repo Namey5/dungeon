@@ -43,7 +43,10 @@ struct Room {
         struct {
             int8_t maxDamage;
         } trap;
-        uint8_t enemy;
+        struct {
+            int8_t health;
+            int8_t maxDamage;
+        } enemy;
         uint8_t treasure;
         uint8_t spawn;
     };
