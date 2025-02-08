@@ -49,9 +49,16 @@ const char enemyActionsText[] = (
 #define CheckInput(action, input) (String_CompareLiteral_IgnoreCase(action, input) == 0)
 
 bool IsGameOver(const Dungeon* dungeon, const Player* player);
-void HandleRoom_GeneralInput(char input[32], Dungeon* dungeon, Player* player);
+
+void HandleRoom_GeneralInput(char input[32], Dungeon* dungeon, Player* player, Room* room);
+void HandleRoom_Item(char input[32], Dungeon* dungeon, Player* player, Room* room);
+void HandleRoom_Pit(char input[32], Dungeon* dungeon, Player* player, Room* room);
+void HandleRoom_Trap(char input[32], Dungeon* dungeon, Player* player, Room* room);
+void HandleRoom_Enemy(char input[32], Dungeon* dungeon, Player* player, Room* room);
+
 bool HandleInput_CommonActions(const char* input, Dungeon* dungeon, Player* player);
 bool HandleInput_MovementActions(const char* input, Dungeon* dungeon, Player* player);
+
 void PrintMap(const Dungeon* dungeon, const Player* player);
 
 int32_t main(const int32_t argc, const char *const argv[argc]) {
@@ -109,191 +116,24 @@ int32_t main(const int32_t argc, const char *const argv[argc]) {
         switch (room->type) {
             case ROOM_EMPTY: {
                 printf("You come across an empty room.\n");
-                HandleRoom_GeneralInput(input, dungeon, &player);
+                HandleRoom_GeneralInput(input, dungeon, &player, room);
             } break;
-
             case ROOM_SPAWN: {
                 printf("You stand at the entrance to the dungeon.\n");
-                HandleRoom_GeneralInput(input, dungeon, &player);
+                HandleRoom_GeneralInput(input, dungeon, &player, room);
             } break;
-
             case ROOM_ITEM: {
-                player.inventory[room->item] += 1;
-                printf(
-                    "You found a %s! You now have %d.\n",
-                    ItemType_ToString(room->item),
-                    player.inventory[room->item]
-                );
-                Room_Clear(room);
-                HandleRoom_GeneralInput(input, dungeon, &player);
+                HandleRoom_Item(input, dungeon, &player, room);
             } break;
-
             case ROOM_PIT: {
-                printf(
-                    "You come across a seemingly bottomless pit.\n"
-                    "%s\n",
-                    pitActionsText
-                );
-
-                while (!IsGameOver(dungeon, &player)) {
-                    printf(
-                        "What do you do (type 'help' for a list of actions)?\n"
-                        "> "
-                    );
-
-                    scanf("%31s", input);
-
-                    if (CheckInput("help", input)) {
-                        printf(
-                            "%s\n"
-                            "%s\n",
-                            commonActionsText,
-                            pitActionsText
-                        );
-                    } else if (CheckInput("jump", input)) {
-                        int32_t successPercentage = 85;
-                        for (int32_t i = 0; i < _ITEM_TYPE_COUNT; ++i) {
-                            successPercentage -= player.inventory[i] * 3;
-                        }
-
-                        if (RandRangei32(0, 100) < successPercentage) {
-                            printf("You successfully jump the pit!\n");
-                            HandleRoom_GeneralInput(input, dungeon, &player);
-                            break;
-                        } else {
-                            printf("You fall to your doom in your attempt to clear the pit.\n");
-                            player.health.current = 0;
-                            break;
-                        }
-                    } else if (CheckInput("swing", input)) {
-                        if (player.inventory[ITEM_HOOK] > 0 && player.inventory[ITEM_ROPE]) {
-                            printf("Using your HOOK and ROPE, you swing to safety on the other side of the pit.\n");
-                            player.inventory[ITEM_HOOK] -= 1;
-                            player.inventory[ITEM_ROPE] -= 1;
-                            Room_Clear(room);
-                            break;
-                        } else {
-                            printf("You must have at least 1 ROPE and 1 HOOK in order to swing across.\n");
-                        }
-                    } else if (CheckInput("return", input)) {
-                        printf("You edge back into the room from whence you came.\n");
-                        Player_Move(&player, (int8_t[2]) { 0, -1 });
-                        break;
-                    } else if (!HandleInput_CommonActions(input, dungeon, &player)) {
-                        printf("Unrecognised command '%s'.\n", input);
-                    }
-                }
+                HandleRoom_Pit(input, dungeon, &player, room);
             } break;
-
             case ROOM_TRAP: {
-                const int32_t damage = RandRangei32(1, room->trap.maxDamage + 1);
-                player.health.current -= damage;
-                printf(
-                    "You step on a trap and lose %d HEALTH (%d/%d remaining).\n",
-                    damage,
-                    player.health.current,
-                    player.health.max
-                );
-
-                room->trap.maxDamage -= RandRangei32(1, 3);
-                if (room->trap.maxDamage <= 0) {
-                    printf("The trap is destroyed and will cause you no more harm.\n");
-                    Room_Clear(room);
-                }
-
-                HandleRoom_GeneralInput(input, dungeon, &player);
+                HandleRoom_Trap(input, dungeon, &player, room);
             } break;
-
             case ROOM_ENEMY: {
-                printf(
-                    "A vicious cave beast blocks your path.\n"
-                    "%s\n",
-                    enemyActionsText
-                );
-
-                while (!IsGameOver(dungeon, &player)) {
-                    printf(
-                        "You (%d/%d) | VS | Beast (%d/\?\?\?)\n",
-                        player.health.current,
-                        player.health.max,
-                        room->enemy.health
-                    );
-
-                    printf(
-                        "What do you do (type 'help' for a list of actions)?\n"
-                        "> "
-                    );
-
-                    scanf("%31s", input);
-
-                    if (CheckInput("help", input)) {
-                        printf(
-                            "%s\n"
-                            "%s\n",
-                            commonActionsText,
-                            enemyActionsText
-                        );
-                    } else if (CheckInput("fight", input)) {
-                        if (player.inventory[ITEM_SWORD] > 0) {
-                            const int8_t damage = RandRangei32(3, 6);
-                            room->enemy.health -= damage;
-                            printf("You hit the beast with your SWORD and deal %d damage.\n", damage);
-                        } else {
-                            const int8_t damage = RandRangei32(0, 4);
-                            room->enemy.health -= damage;
-                            printf("You hit the beast with your fists and deal %d damage.\n", damage);
-                        }
-
-                        if (room->enemy.health <= 0) {
-                            printf("The beast is defeated!\n");
-                            Room_Clear(room);
-                            HandleRoom_GeneralInput(input, dungeon, &player);
-                            break;
-                        }
-
-                        if (player.inventory[ITEM_SHIELD] > 0) {
-                            const int8_t damage = RandRangei32(0, 3);
-                            player.health.current -= damage;
-                            printf("The beast hits your SHIELD and you take %d damage.\n", damage);
-
-                            if (Randf32() > 0.5f) {
-                                printf("Your SHIELD breaks!\n");
-                                player.inventory[ITEM_SHIELD] -= 1;
-                            }
-                        } else {
-                            const int8_t damage = RandRangei32(1, room->enemy.maxDamage);
-                            player.health.current -= damage;
-                            printf("The beast hits you and deals %d damage.\n", damage);
-                        }
-                    } else if (CheckInput("flee", input)) {
-                        const float rng = Randf32();
-                        if (rng > 0.5f) {
-                            if (rng > 0.8f) {
-                                printf("You successfully evade the creature without harm.\n");
-                            } else {
-                                const int8_t damage = RandRangei32(1, room->enemy.maxDamage);
-                                player.health.current -= damage;
-                                printf(
-                                    "You successfully evade the creature, but lose %d HEALTH in the process (%d/%d remaining).\n",
-                                    damage,
-                                    player.health.current,
-                                    player.health.max
-                                );
-                            }
-
-                            Player_Move(&player, (int8_t[2]) { 0, -1 });
-                            break;
-                        } else {
-                            const int8_t damage = RandRangei32(1, room->enemy.maxDamage);
-                            player.health.current -= damage;
-                            printf("You fail to evade the creature and lose %d HEALTH in the process.\n", damage);
-                        }
-                    } else if (!HandleInput_CommonActions(input, dungeon, &player)) {
-                        printf("Unrecognised command '%s'.\n", input);
-                    }
-                }
+                HandleRoom_Enemy(input, dungeon, &player, room);
             } break;
-
             case ROOM_TREASURE:
             case _ROOM_TYPE_COUNT: {
                 assert(false);
@@ -320,7 +160,8 @@ bool IsGameOver(const Dungeon *const dungeon, const Player *const player) {
     return player->health.current == 0;
 }
 
-void HandleRoom_GeneralInput(char input[32], Dungeon *const dungeon, Player *const player) {
+void HandleRoom_GeneralInput(char input[32], Dungeon *const dungeon, Player *const player, Room *const room) {
+    (void)room;
     assert(dungeon != NULL);
     assert(player != NULL);
 
@@ -333,6 +174,199 @@ void HandleRoom_GeneralInput(char input[32], Dungeon *const dungeon, Player *con
 
         if (HandleInput_MovementActions(input, dungeon, player)) {
             break;
+        } else if (!HandleInput_CommonActions(input, dungeon, player)) {
+            printf("Unrecognised command '%s'.\n", input);
+        }
+    }
+}
+
+void HandleRoom_Item(char input[32], Dungeon *const dungeon, Player *const player, Room *const room) {
+    assert(dungeon != NULL);
+    assert(player != NULL);
+    assert(room != NULL);
+
+    player->inventory[room->item] += 1;
+    printf(
+        "You found a %s! You now have %d.\n",
+        ItemType_ToString(room->item),
+        player->inventory[room->item]
+    );
+    Room_Clear(room);
+    HandleRoom_GeneralInput(input, dungeon, player, room);
+}
+
+void HandleRoom_Pit(char input[32], Dungeon *const dungeon, Player *const player, Room *const room) {
+    assert(dungeon != NULL);
+    assert(player != NULL);
+    assert(room != NULL);
+
+    printf(
+        "You come across a seemingly bottomless pit.\n"
+        "%s\n",
+        pitActionsText
+    );
+
+    while (!IsGameOver(dungeon, player)) {
+        printf(
+            "What do you do (type 'help' for a list of actions)?\n"
+            "> "
+        );
+
+        scanf("%31s", input);
+
+        if (CheckInput("help", input)) {
+            printf(
+                "%s\n"
+                "%s\n",
+                commonActionsText,
+                pitActionsText
+            );
+        } else if (CheckInput("jump", input)) {
+            int32_t successPercentage = 85;
+            for (int32_t i = 0; i < _ITEM_TYPE_COUNT; ++i) {
+                successPercentage -= player->inventory[i] * 3;
+            }
+
+            if (RandRangei32(0, 100) < successPercentage) {
+                printf("You successfully jump the pit!\n");
+                HandleRoom_GeneralInput(input, dungeon, player, room);
+                break;
+            } else {
+                printf("You fall to your doom in your attempt to clear the pit.\n");
+                player->health.current = 0;
+                break;
+            }
+        } else if (CheckInput("swing", input)) {
+            if (player->inventory[ITEM_HOOK] > 0 && player->inventory[ITEM_ROPE]) {
+                printf("Using your HOOK and ROPE, you swing to safety on the other side of the pit.\n");
+                player->inventory[ITEM_HOOK] -= 1;
+                player->inventory[ITEM_ROPE] -= 1;
+                Room_Clear(room);
+                break;
+            } else {
+                printf("You must have at least 1 ROPE and 1 HOOK in order to swing across.\n");
+            }
+        } else if (CheckInput("return", input)) {
+            printf("You edge back into the room from whence you came.\n");
+            Player_Move(player, (int8_t[2]) { 0, -1 });
+            break;
+        } else if (!HandleInput_CommonActions(input, dungeon, player)) {
+            printf("Unrecognised command '%s'.\n", input);
+        }
+    }
+}
+
+void HandleRoom_Trap(char input[32], Dungeon *const dungeon, Player *const player, Room *const room) {
+    assert(dungeon != NULL);
+    assert(player != NULL);
+    assert(room != NULL);
+
+    const int32_t damage = RandRangei32(1, room->trap.maxDamage + 1);
+    player->health.current -= damage;
+    printf(
+        "You step on a trap and lose %d HEALTH (%d/%d remaining).\n",
+        damage,
+        player->health.current,
+        player->health.max
+    );
+
+    room->trap.maxDamage -= RandRangei32(1, 3);
+    if (room->trap.maxDamage <= 0) {
+        printf("The trap is destroyed and will cause you no more harm.\n");
+        Room_Clear(room);
+    }
+
+    HandleRoom_GeneralInput(input, dungeon, player, room);
+}
+
+void HandleRoom_Enemy(char input[32], Dungeon *const dungeon, Player *const player, Room *const room) {
+    assert(dungeon != NULL);
+    assert(player != NULL);
+    assert(room != NULL);
+
+    printf(
+        "A vicious cave beast blocks your path.\n"
+        "%s\n",
+        enemyActionsText
+    );
+
+    while (!IsGameOver(dungeon, player)) {
+        printf(
+            "You (%d/%d) | VS | Beast (%d/\?\?\?)\n",
+            player->health.current,
+            player->health.max,
+            room->enemy.health
+        );
+
+        printf(
+            "What do you do (type 'help' for a list of actions)?\n"
+            "> "
+        );
+
+        scanf("%31s", input);
+
+        if (CheckInput("help", input)) {
+            printf(
+                "%s\n"
+                "%s\n",
+                commonActionsText,
+                enemyActionsText
+            );
+        } else if (CheckInput("fight", input)) {
+            if (player->inventory[ITEM_SWORD] > 0) {
+                const int8_t damage = RandRangei32(3, 6);
+                room->enemy.health -= damage;
+                printf("You hit the beast with your SWORD and deal %d damage.\n", damage);
+            } else {
+                const int8_t damage = RandRangei32(0, 4);
+                room->enemy.health -= damage;
+                printf("You hit the beast with your fists and deal %d damage.\n", damage);
+            }
+
+            if (room->enemy.health <= 0) {
+                printf("The beast is defeated!\n");
+                Room_Clear(room);
+                HandleRoom_GeneralInput(input, dungeon, player, room);
+                break;
+            }
+
+            if (player->inventory[ITEM_SHIELD] > 0) {
+                const int8_t damage = RandRangei32(0, 3);
+                player->health.current -= damage;
+                printf("The beast hits your SHIELD and you take %d damage.\n", damage);
+
+                if (Randf32() > 0.5f) {
+                    printf("Your SHIELD breaks!\n");
+                    player->inventory[ITEM_SHIELD] -= 1;
+                }
+            } else {
+                const int8_t damage = RandRangei32(1, room->enemy.maxDamage);
+                player->health.current -= damage;
+                printf("The beast hits you and deals %d damage.\n", damage);
+            }
+        } else if (CheckInput("flee", input)) {
+            const float rng = Randf32();
+            if (rng > 0.5f) {
+                if (rng > 0.8f) {
+                    printf("You successfully evade the creature without harm.\n");
+                } else {
+                    const int8_t damage = RandRangei32(1, room->enemy.maxDamage);
+                    player->health.current -= damage;
+                    printf(
+                        "You successfully evade the creature, but lose %d HEALTH in the process (%d/%d remaining).\n",
+                        damage,
+                        player->health.current,
+                        player->health.max
+                    );
+                }
+
+                Player_Move(player, (int8_t[2]) { 0, -1 });
+                break;
+            } else {
+                const int8_t damage = RandRangei32(1, room->enemy.maxDamage);
+                player->health.current -= damage;
+                printf("You fail to evade the creature and lose %d HEALTH in the process.\n", damage);
+            }
         } else if (!HandleInput_CommonActions(input, dungeon, player)) {
             printf("Unrecognised command '%s'.\n", input);
         }
