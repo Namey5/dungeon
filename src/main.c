@@ -25,11 +25,19 @@ const char commonActionsText[] = (
 );
 
 const char movementActionsText[] = (
-    "Movement:\n"
+    "Movement Actions:\n"
     "  'forward' - move into the room you are currently facing\n"
     "  'back' - turn around and move back into the previous room\n"
     "  'left' - turn anti-clockwise and move into the next room\n"
     "  'right' - turn clockwise and move into the next room"
+);
+
+const char pitActionsText[] = (
+    "Pit Actions:\n"
+    "  'jump' - attempt to jump across the pit, keeping in mind\n"
+    "           that your gear's weight will influence your chances\n"
+    "  'swing' - use 1 ROPE and 1 HOOK to guarrantee safe passage\n"
+    "  'return' - retreat back into the previous room"
 );
 
 #define CheckInput(action, input) (String_CompareLiteral_IgnoreCase(action, input) == 0)
@@ -80,7 +88,7 @@ int32_t main(const int32_t argc, const char *const argv[argc]) {
     );
 
     char input[32];
-    while (true) {
+    while (player.health.current > 0) {
         Room *const room = &dungeon->rooms[Dungeon_RoomIndex(dungeon, player.position.current)];
 
         printf("--------------------------\n");
@@ -106,7 +114,62 @@ int32_t main(const int32_t argc, const char *const argv[argc]) {
             } break;
 
             case ROOM_PIT: {
-                printf("You come across a seemingly bottomless pit.\n");
+                printf(
+                    "You come across a seemingly bottomless pit.\n"
+                    "%s\n",
+                    pitActionsText
+                );
+
+                while (player.health.current > 0) {
+                    printf(
+                        "What do you do (type 'help' for a list of actions)?\n"
+                        "> "
+                    );
+
+                    scanf("%31s", input);
+
+                    if (CheckInput("help", input)) {
+                        printf(
+                            "%s\n"
+                            "%s\n",
+                            commonActionsText,
+                            pitActionsText
+                        );
+                    } else if (CheckInput("jump", input)) {
+                        int32_t successPercentage = 85;
+                        for (int32_t i = 0; i < _ITEM_TYPE_COUNT; ++i) {
+                            successPercentage -= player.inventory[i] * 3;
+                        }
+
+                        if (RandRangei32(0, 100) < successPercentage) {
+                            printf("You successfully jump the pit!\n");
+                            // TODO: move in a valid direction.
+                            break;
+                        } else {
+                            printf("You fall to your doom in your attempt to clear the pit.\n");
+                            player.health.current = 0;
+                            break;
+                        }
+                    } else if (CheckInput("swing", input)) {
+                        if (player.inventory[ITEM_HOOK] > 0 && player.inventory[ITEM_ROPE]) {
+                            printf("Using your HOOK and ROPE, you swing to safety on the other side of the pit.\n");
+                            player.inventory[ITEM_HOOK] -= 1;
+                            player.inventory[ITEM_ROPE] -= 1;
+                            Room_Clear(room);
+                            break;
+                        } else {
+                            printf("You must have at least 1 ROPE and 1 HOOK in order to swing across.\n");
+                        }
+                    } else if (CheckInput("return", input)) {
+                        printf("You edge back into the room from whence you came.\n");
+                        Player_Move(&player, (int8_t[2]) { 0, -1 });
+                        break;
+                    } else if (HandleCommonActions(input, dungeon, &player)) {
+                        // Do nothing.
+                    } else {
+                        printf("Unrecognised command '%s'.\n", input);
+                    }
+                }
             } break;
 
             case ROOM_TRAP: {
@@ -127,7 +190,7 @@ int32_t main(const int32_t argc, const char *const argv[argc]) {
             } break;
         }
 
-        while (true) {
+        while (player.health.current > 0) {
             printf(
                 "What do you do (type 'help' for a list of actions)?\n"
                 "> "
@@ -157,7 +220,12 @@ bool HandleCommonActions(const char* input, Dungeon *const dungeon, Player *cons
     if (CheckInput("exit", input)) {
         player->health.current = 0;
     } else if (CheckInput("help", input)) {
-        printf("%s\n%s\n", commonActionsText, movementActionsText);
+        printf(
+            "%s\n"
+            "%s\n",
+            commonActionsText,
+            movementActionsText
+        );
     } else if (CheckInput("map", input)) {
         PrintMap(dungeon, player);
     } else if (CheckInput("health", input)) {
