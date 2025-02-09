@@ -27,15 +27,15 @@ const int32_t roomDistribution[_ROOM_TYPE_COUNT] = {
 Dungeon* Dungeon_Create(const vec2 size) {
     assert(size != NULL);
 
-    Dungeon *const self = calloc(1, sizeof(*self));
+    const int32_t totalRooms = size[0] * size[1];
+    assert(totalRooms >= _ROOM_TYPE_COUNT);
+    Dungeon *const self = calloc(1, sizeof(*self) + sizeof(self->rooms[0]) * totalRooms);
     assert(self != NULL);
 
     Vec2_Set(self->size, size);
 
-    const int32_t totalRooms = size[0] * size[1];
-    assert(totalRooms >= _ROOM_TYPE_COUNT);
-    self->rooms = calloc(totalRooms, sizeof(self->rooms[0]));
-    assert(self->rooms != NULL);
+    // Room are packed at end of Dungeon allocation:
+    self->rooms = (Room*)((uintptr_t)self + sizeof(*self));
 
     const RoomType defaultRoom = ROOM_EMPTY;
     {
@@ -116,8 +116,6 @@ Dungeon* Dungeon_Create(const vec2 size) {
 
 void Dungeon_Destroy(Dungeon *const self) {
     assert(self != NULL);
-    assert(self->rooms != NULL);
-    free(self->rooms);
     free(self);
 }
 
